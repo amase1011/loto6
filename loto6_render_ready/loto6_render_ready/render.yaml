@@ -3,6 +3,7 @@ services:
     name: loto6-analyzer
     runtime: node
     plan: free
-    buildCommand: ""
+    buildCommand: echo "No build step"
     startCommand: node server.js
     autoDeploy: true
+    healthCheckPath: /api/health

@@ -1,7 +1,13 @@
 {
   "name": "loto6-analyzer",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "private": true,
-  "scripts": {"start": "node server.js"},
-  "engines": {"node": ">=18"}
+  "description": "ロト6専用の過去データ分析Webアプリ",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js && node --check public/sw.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }
