@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="ロト6専用の過去当選データ分析・候補作成Webアプリ">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="/style.css">
+  <title>ロト6分析</title>
+</head>
+<body>
+<header class="appHeader">
+  <div>
+    <h1>ロト6分析</h1>
+    <p>過去データ分析・参考候補作成</p>
+  </div>
+  <span class="version">v2.1</span>
+</header>
+
+<main id="captureArea">
+  <div class="notice">
+    過去データを統計的に整理するツールです。当選を予測・保証するものではありません。「参考スコア」は実際の当選確率を表しません。
+  </div>
+
+  <section class="card controlsCard">
+    <div class="actions">
+      <button id="loadBtn">データ取得・更新</button>
+      <button id="pngBtn" class="secondary">画面をPNG保存</button>
+      <button id="installBtn" class="secondary" hidden>ホーム画面に追加</button>
+    </div>
+    <p id="status" class="status">データを読み込んでいます…</p>
+  </section>
+
+  <section class="summary" id="summary" aria-label="データ概要"></section>
+
+  <section class="card">
+    <h2>分析範囲・並び替え</h2>
+    <div class="row">
+      <label class="selectLabel">分析範囲
+        <select id="period">
+          <option value="all">全期間</option>
+          <option value="10">直近10回</option>
+          <option value="30">直近30回</option>
+          <option value="50">直近50回</option>
+          <option value="100">直近100回</option>
+          <option value="300">直近300回</option>
+        </select>
+      </label>
+      <label class="selectLabel">数字別統計
+        <select id="sort">
+          <option value="number">数字順</option>
+          <option value="rateDesc">出現率が高い順</option>
+          <option value="rateAsc">出現率が低い順</option>
+          <option value="overdueDesc">未出現期間が長い順</option>
+          <option value="allDesc">全期間の出現回数順</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <div class="grid chartsGrid">
+    <section class="card">
+      <div class="sectionTitleRow">
+        <div><h2>出現回数 上位10数字</h2><p class="muted">選択した分析範囲のランキング</p></div>
+      </div>
+      <div id="frequencyChart" class="chartBox"></div>
+    </section>
+    <section class="card">
+      <h2>合計値の推移</h2>
+      <p class="muted">選択範囲のうち直近最大50回</p>
+      <div id="sumTrendChart" class="chartBox"></div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card accentHot"><h2>🔥 ホットナンバー</h2><p class="muted">選択期間で出現回数が多い数字</p><div id="hot" class="balls"></div></section>
+    <section class="card accentCold"><h2>❄️ コールドナンバー</h2><p class="muted">最後に出てからの回数が長い数字</p><div id="cold" class="balls"></div></section>
+  </div>
+
+  <section class="card">
+    <h2>数字別統計</h2>
+    <div class="tableWrap">
+      <table>
+        <thead><tr><th>数字</th><th>出現回数</th><th>出現率</th><th>未出現</th><th>平均間隔</th></tr></thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card"><h2>奇数個数の分布</h2><div id="oddDist"></div></section>
+    <section class="card"><h2>合計値の分布</h2><div id="sumDist"></div></section>
+  </div>
+
+  <section class="card featured">
+    <div class="sectionHead">
+      <div>
+        <h2>🧠 今週の参考候補</h2>
+        <p class="muted">直近30回・100回・全期間の頻度、未出現期間、合計値、奇偶バランスを独自の統計モデルで採点します。</p>
+      </div>
+      <button id="weeklyBtn">参考候補を作る</button>
+    </div>
+    <div id="weeklyCandidates" class="candidateGrid"></div>
+  </section>
+
+  <section class="card"><h2>直近10回</h2><div id="recent"></div></section>
+
+  <section class="card">
+    <h2>条件付き候補生成</h2>
+    <div class="formGrid">
+      <label>口数<input id="ticketCount" type="number" value="5" min="1" max="20"></label>
+      <label>合計最小<input id="minSum" type="number" value="90" min="21" max="243"></label>
+      <label>合計最大<input id="maxSum" type="number" value="175" min="21" max="243"></label>
+      <label>候補同士の最大重複<select id="overlap"><option>2</option><option selected>3</option><option>4</option></select></label>
+    </div>
+    <button id="generateBtn">候補を生成</button>
+    <div id="candidates" class="candidateGrid"></div>
+  </section>
+</main>
+
+<a class="purchaseLink" href="https://www.takarakuji-official.jp/ec/loto6/?knyschm=0&amp;kujiprdShbt=62" target="_blank" rel="noopener noreferrer" aria-label="宝くじ公式サイトでロト6を購入">
+  🎫 <span class="purchaseLong">ロト6を購入</span><span class="purchaseShort">購入</span> ↗
+</a>
+
+<footer>
+  データ元：KYO's LOTO6 公開CSV（個人利用向け）<br>
+  購入ボタンは宝くじ公式サイトを別タブで開きます。
+</footer>
+<script src="/app.js"></script>
+</body>
+</html>
