@@ -2,13 +2,15 @@
 
 let draws = [];
 let deferredInstallPrompt = null;
-const CACHE_KEY = 'loto6_draws_v2_1';
-const CACHE_META_KEY = 'loto6_draws_meta_v2_1';
+const CACHE_KEY = 'loto6_draws_v2_3';
+const CACHE_META_KEY = 'loto6_draws_meta_v2_3';
+let historyPage = 1;
 
 const $ = id => document.getElementById(id);
 const average = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const escapeXml = value => String(value).replace(/[<>&'\"]/g, character => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','\"':'&quot;'}[character]));
+const formatYen = value => `${Math.max(0, Number(value) || 0).toLocaleString('ja-JP')}円`;
 
 function selectedDraws() {
   const value = $('period').value;
@@ -54,6 +56,12 @@ function render() {
   const analysis = analyze(rows);
   const allCounts = countAllDraws();
   const latest = draws.at(-1);
+
+  const currentCarryover = Math.max(0, Number(latest.carryover) || 0);
+  $('currentCarryover').textContent = formatYen(currentCarryover);
+  $('carryoverMeta').textContent = currentCarryover > 0
+    ? `第${latest.round}回の抽選結果時点` 
+    : `第${latest.round}回の抽選結果時点・キャリーオーバーなし`;
 
   $('summary').innerHTML = `
     <div class="item"><span>取得件数</span><strong>${draws.length}</strong></div>
@@ -102,12 +110,85 @@ function render() {
       <strong>第${draw.round}回</strong> ${draw.date}
       <div>${draw.nums.map(number => `<span class="ball">${number}</span>`).join('')} <small>BO ${draw.bonus}</small></div>
     </div>`).join('');
+
+  renderHistory();
 }
 
 function renderDistribution(id, data) {
   const maximum = Math.max(...data.map(item => item[1]), 1);
   $(id).innerHTML = data.map(([label, value]) => `
     <div class="barRow"><span>${label}</span><div class="bar"><span style="width:${value / maximum * 100}%"></span></div><b>${value}</b></div>`).join('');
+}
+
+function historyNumberFilters() {
+  return [...new Set(($('historyNumbers').value.match(/\d+/g) || [])
+    .map(Number)
+    .filter(number => Number.isInteger(number) && number >= 1 && number <= 43))];
+}
+
+function filteredHistoryRows() {
+  const query = $('historyQuery').value.trim().toLowerCase();
+  const requiredNumbers = historyNumberFilters();
+  const order = $('historyOrder').value;
+
+  const filtered = draws.filter(draw => {
+    const matchesQuery = !query
+      || String(draw.round).includes(query.replace(/^第|回$/g, ''))
+      || String(draw.date).toLowerCase().includes(query);
+    const matchesNumbers = requiredNumbers.every(number => draw.nums.includes(number));
+    return matchesQuery && matchesNumbers;
+  });
+
+  filtered.sort((left, right) => order === 'oldest' ? left.round - right.round : right.round - left.round);
+  return filtered;
+}
+
+function renderHistory() {
+  if (!$('historyList')) return;
+
+  if (!draws.length) {
+    $('historySummary').textContent = 'データを取得すると表示されます。';
+    $('historyList').innerHTML = '';
+    return;
+  }
+
+  const filtered = filteredHistoryRows();
+  const pageSize = Number($('historyPageSize').value) || 20;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  historyPage = clamp(historyPage, 1, totalPages);
+  const start = (historyPage - 1) * pageSize;
+  const pageRows = filtered.slice(start, start + pageSize);
+  const requiredNumbers = historyNumberFilters();
+
+  const filterText = requiredNumbers.length ? `・本数字 ${requiredNumbers.join('・')} をすべて含む` : '';
+  $('historySummary').textContent = `${filtered.length}件中 ${filtered.length ? start + 1 : 0}〜${Math.min(start + pageSize, filtered.length)}件を表示${filterText}`;
+  $('historyPageInfo').textContent = `${historyPage} / ${totalPages}`;
+
+  $('historyList').innerHTML = pageRows.length ? pageRows.map(draw => {
+    const firstPrizeWinners = Math.max(0, Number(draw.firstPrizeWinners) || 0);
+    return `
+    <article class="historyItem${firstPrizeWinners > 0 ? ' hasFirstPrizeWinner' : ''}">
+      <div class="historyMeta">
+        <strong>第${draw.round}回</strong>
+        <time>${draw.date}</time>
+        ${firstPrizeWinners > 0 ? `<span class="firstPrizeWin">一等当選 ${firstPrizeWinners.toLocaleString('ja-JP')}口</span>` : ''}
+      </div>
+      <div class="historyNumbers">
+        ${draw.nums.map(number => `<span class="ball${requiredNumbers.includes(number) ? ' historyMatchBall' : ''}">${number}</span>`).join('')}
+        <span class="bonusBall">BO ${draw.bonus}</span>
+      </div>
+    </article>`;
+  }).join('') : '<div class="historyEmpty">条件に一致する抽選結果はありません。</div>';
+
+  $('historyFirstBtn').disabled = historyPage <= 1;
+  $('historyPrevBtn').disabled = historyPage <= 1;
+  $('historyNextBtn').disabled = historyPage >= totalPages;
+  $('historyLastBtn').disabled = historyPage >= totalPages;
+}
+
+function updateHistoryFilters() {
+  historyPage = 1;
+  renderHistory();
 }
 
 function renderFrequencyChart(rows, analysis) {
@@ -474,6 +555,27 @@ $('sort').addEventListener('change', render);
 $('generateBtn').addEventListener('click', generate);
 $('weeklyBtn').addEventListener('click', generateWeekly);
 $('pngBtn').addEventListener('click', captureScreen);
+$('historyJumpBtn').addEventListener('click', () => $('historySection').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+$('historyQuery').addEventListener('input', updateHistoryFilters);
+$('historyNumbers').addEventListener('input', updateHistoryFilters);
+$('historyOrder').addEventListener('change', updateHistoryFilters);
+$('historyPageSize').addEventListener('change', updateHistoryFilters);
+$('historyResetBtn').addEventListener('click', () => {
+  $('historyQuery').value = '';
+  $('historyNumbers').value = '';
+  $('historyOrder').value = 'newest';
+  $('historyPageSize').value = '20';
+  updateHistoryFilters();
+});
+$('historyFirstBtn').addEventListener('click', () => { historyPage = 1; renderHistory(); $('historySection').scrollIntoView({ block: 'start' }); });
+$('historyPrevBtn').addEventListener('click', () => { historyPage--; renderHistory(); $('historySection').scrollIntoView({ block: 'start' }); });
+$('historyNextBtn').addEventListener('click', () => { historyPage++; renderHistory(); $('historySection').scrollIntoView({ block: 'start' }); });
+$('historyLastBtn').addEventListener('click', () => {
+  const pageSize = Number($('historyPageSize').value) || 20;
+  historyPage = Math.max(1, Math.ceil(filteredHistoryRows().length / pageSize));
+  renderHistory();
+  $('historySection').scrollIntoView({ block: 'start' });
+});
 
 restoreCache();
 load(false);

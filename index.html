@@ -7,7 +7,7 @@
   <meta name="description" content="ロト6専用の過去当選データ分析・候補作成Webアプリ">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=23">
   <title>ロト6分析</title>
 </head>
 <body>
@@ -16,7 +16,7 @@
     <h1>ロト6分析</h1>
     <p>過去データ分析・参考候補作成</p>
   </div>
-  <span class="version">v2.1</span>
+  <span class="version">v2.3</span>
 </header>
 
 <main id="captureArea">
@@ -29,8 +29,15 @@
       <button id="loadBtn">データ取得・更新</button>
       <button id="pngBtn" class="secondary">画面をPNG保存</button>
       <button id="installBtn" class="secondary" hidden>ホーム画面に追加</button>
+      <button id="historyJumpBtn" class="secondary">全履歴を見る</button>
     </div>
     <p id="status" class="status">データを読み込んでいます…</p>
+  </section>
+
+  <section class="carryoverHero" aria-live="polite" aria-label="現在のキャリーオーバー額">
+    <span>現在のキャリーオーバー額</span>
+    <strong id="currentCarryover">—</strong>
+    <small id="carryoverMeta">最新データを取得すると表示されます</small>
   </section>
 
   <section class="summary" id="summary" aria-label="データ概要"></section>
@@ -107,6 +114,46 @@
 
   <section class="card"><h2>直近10回</h2><div id="recent"></div></section>
 
+  <section class="card historyCard" id="historySection">
+    <div class="sectionHead">
+      <div>
+        <h2>全過去データ</h2>
+        <p class="muted">第1回から最新回まで、抽選回・日付・本数字で絞り込めます。</p>
+      </div>
+      <button id="historyResetBtn" class="secondary">条件をクリア</button>
+    </div>
+    <div class="historyControls">
+      <label>抽選回・日付
+        <input id="historyQuery" type="search" inputmode="search" placeholder="例：2118 または 2026-07">
+      </label>
+      <label>含む本数字
+        <input id="historyNumbers" type="search" inputmode="numeric" placeholder="例：3 12 27">
+      </label>
+      <label>表示順
+        <select id="historyOrder">
+          <option value="newest">新しい順</option>
+          <option value="oldest">古い順</option>
+        </select>
+      </label>
+      <label>1ページ
+        <select id="historyPageSize">
+          <option value="20" selected>20件</option>
+          <option value="50">50件</option>
+          <option value="100">100件</option>
+        </select>
+      </label>
+    </div>
+    <p id="historySummary" class="historySummary"></p>
+    <div id="historyList" class="historyList"></div>
+    <nav class="historyPager" aria-label="全過去データのページ切り替え">
+      <button id="historyFirstBtn" class="secondary">最初</button>
+      <button id="historyPrevBtn" class="secondary">前へ</button>
+      <span id="historyPageInfo">1 / 1</span>
+      <button id="historyNextBtn" class="secondary">次へ</button>
+      <button id="historyLastBtn" class="secondary">最後</button>
+    </nav>
+  </section>
+
   <section class="card">
     <h2>条件付き候補生成</h2>
     <div class="formGrid">
@@ -121,13 +168,13 @@
 </main>
 
 <a class="purchaseLink" href="https://www.takarakuji-official.jp/ec/loto6/?knyschm=0&amp;kujiprdShbt=62" target="_blank" rel="noopener noreferrer" aria-label="宝くじ公式サイトでロト6を購入">
-  🎫 <span class="purchaseLong">ロト6を購入</span><span class="purchaseShort">購入</span> ↗
+  🎫 ロト6を購入 ↗
 </a>
 
 <footer>
   データ元：KYO's LOTO6 公開CSV（個人利用向け）<br>
   購入ボタンは宝くじ公式サイトを別タブで開きます。
 </footer>
-<script src="/app.js"></script>
+<script src="/app.js?v=23"></script>
 </body>
 </html>
