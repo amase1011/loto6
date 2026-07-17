@@ -2,14 +2,15 @@
 
 let draws = [];
 let deferredInstallPrompt = null;
-const CACHE_KEY = 'loto6_draws_v2_2';
-const CACHE_META_KEY = 'loto6_draws_meta_v2_2';
+const CACHE_KEY = 'loto6_draws_v2_3';
+const CACHE_META_KEY = 'loto6_draws_meta_v2_3';
 let historyPage = 1;
 
 const $ = id => document.getElementById(id);
 const average = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const escapeXml = value => String(value).replace(/[<>&'\"]/g, character => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','\"':'&quot;'}[character]));
+const formatYen = value => `${Math.max(0, Number(value) || 0).toLocaleString('ja-JP')}円`;
 
 function selectedDraws() {
   const value = $('period').value;
@@ -55,6 +56,12 @@ function render() {
   const analysis = analyze(rows);
   const allCounts = countAllDraws();
   const latest = draws.at(-1);
+
+  const currentCarryover = Math.max(0, Number(latest.carryover) || 0);
+  $('currentCarryover').textContent = formatYen(currentCarryover);
+  $('carryoverMeta').textContent = currentCarryover > 0
+    ? `第${latest.round}回の抽選結果時点` 
+    : `第${latest.round}回の抽選結果時点・キャリーオーバーなし`;
 
   $('summary').innerHTML = `
     <div class="item"><span>取得件数</span><strong>${draws.length}</strong></div>
@@ -157,17 +164,21 @@ function renderHistory() {
   $('historySummary').textContent = `${filtered.length}件中 ${filtered.length ? start + 1 : 0}〜${Math.min(start + pageSize, filtered.length)}件を表示${filterText}`;
   $('historyPageInfo').textContent = `${historyPage} / ${totalPages}`;
 
-  $('historyList').innerHTML = pageRows.length ? pageRows.map(draw => `
-    <article class="historyItem">
+  $('historyList').innerHTML = pageRows.length ? pageRows.map(draw => {
+    const firstPrizeWinners = Math.max(0, Number(draw.firstPrizeWinners) || 0);
+    return `
+    <article class="historyItem${firstPrizeWinners > 0 ? ' hasFirstPrizeWinner' : ''}">
       <div class="historyMeta">
         <strong>第${draw.round}回</strong>
         <time>${draw.date}</time>
+        ${firstPrizeWinners > 0 ? `<span class="firstPrizeWin">一等当選 ${firstPrizeWinners.toLocaleString('ja-JP')}口</span>` : ''}
       </div>
       <div class="historyNumbers">
         ${draw.nums.map(number => `<span class="ball${requiredNumbers.includes(number) ? ' historyMatchBall' : ''}">${number}</span>`).join('')}
         <span class="bonusBall">BO ${draw.bonus}</span>
       </div>
-    </article>`).join('') : '<div class="historyEmpty">条件に一致する抽選結果はありません。</div>';
+    </article>`;
+  }).join('') : '<div class="historyEmpty">条件に一致する抽選結果はありません。</div>';
 
   $('historyFirstBtn').disabled = historyPage <= 1;
   $('historyPrevBtn').disabled = historyPage <= 1;
