@@ -2,8 +2,8 @@
 
 let draws = [];
 let deferredInstallPrompt = null;
-const CACHE_KEY = 'loto6_draws_v2_3';
-const CACHE_META_KEY = 'loto6_draws_meta_v2_3';
+const CACHE_KEY = 'loto6_draws_v2_4';
+const CACHE_META_KEY = 'loto6_draws_meta_v2_4';
 let historyPage = 1;
 
 const $ = id => document.getElementById(id);
@@ -57,11 +57,14 @@ function render() {
   const allCounts = countAllDraws();
   const latest = draws.at(-1);
 
-  const currentCarryover = Math.max(0, Number(latest.carryover) || 0);
-  $('currentCarryover').textContent = formatYen(currentCarryover);
-  $('carryoverMeta').textContent = currentCarryover > 0
-    ? `第${latest.round}回の抽選結果時点` 
-    : `第${latest.round}回の抽選結果時点・キャリーオーバーなし`;
+  const hasCarryoverData = Number.isFinite(Number(latest.carryover));
+  const currentCarryover = hasCarryoverData ? Math.max(0, Number(latest.carryover)) : null;
+  $('currentCarryover').textContent = hasCarryoverData ? formatYen(currentCarryover) : '取得できません';
+  $('carryoverMeta').textContent = !hasCarryoverData
+    ? '最新データを更新してください'
+    : currentCarryover > 0
+      ? `第${latest.round}回の抽選結果時点`
+      : `第${latest.round}回の抽選結果時点・キャリーオーバーなし`;
 
   $('summary').innerHTML = `
     <div class="item"><span>取得件数</span><strong>${draws.length}</strong></div>
@@ -171,7 +174,9 @@ function renderHistory() {
       <div class="historyMeta">
         <strong>第${draw.round}回</strong>
         <time>${draw.date}</time>
-        ${firstPrizeWinners > 0 ? `<span class="firstPrizeWin">一等当選 ${firstPrizeWinners.toLocaleString('ja-JP')}口</span>` : ''}
+        ${firstPrizeWinners > 0
+          ? `<span class="firstPrizeWin">一等当選 ${firstPrizeWinners.toLocaleString('ja-JP')}口</span>`
+          : '<span class="firstPrizeNone">一等当選なし</span>'}
       </div>
       <div class="historyNumbers">
         ${draw.nums.map(number => `<span class="ball${requiredNumbers.includes(number) ? ' historyMatchBall' : ''}">${number}</span>`).join('')}
@@ -279,7 +284,10 @@ async function load(force = false) {
     if (!response.ok) throw new Error(result.error || '取得に失敗しました。');
     draws = result.rows;
     saveCache(draws, { source: result.source, fetchedAt: result.fetchedAt });
-    status.textContent = `${result.count}件を取得しました。取得元：${result.source}`;
+    const latestFinancials = result.latestFinancials;
+    status.textContent = latestFinancials
+      ? `${result.count}件を取得しました。最新CO：${formatYen(latestFinancials.carryover)}／取得元：${result.source}`
+      : `${result.count}件を取得しました。金額データなしの旧サーバーです。server.jsを更新してください。`;
     render();
   } catch (error) {
     status.textContent = draws.length

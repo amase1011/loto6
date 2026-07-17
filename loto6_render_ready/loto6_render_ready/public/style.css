@@ -69,3 +69,6 @@ footer{text-align:center;color:var(--muted);font-size:.78rem;padding:0 14px 28px
 .hasFirstPrizeWinner{background:linear-gradient(90deg,#fff7f7 0%,#fff 42%)}
 .hasFirstPrizeWinner .historyMeta strong{color:#b91c1c}
 @media(max-width:420px){.carryoverHero{padding:17px 10px}.carryoverHero strong{font-size:clamp(1.85rem,10vw,2.7rem)}}
+
+/* v2.4 1等当選なし表示 */
+.historyMeta .firstPrizeNone{display:inline-flex;align-items:center;width:max-content;margin-top:4px;color:#6b7280;font-size:.78rem;font-weight:700;line-height:1.2}

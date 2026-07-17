@@ -1,6 +1,6 @@
 'use strict';
-const CACHE_NAME = 'loto6-analyzer-v2-3';
-const STATIC_FILES = ['/', '/index.html', '/style.css', '/app.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
+const CACHE_NAME = 'loto6-analyzer-v2-4';
+const STATIC_FILES = ['/', '/index.html', '/style.css?v=24', '/app.js?v=24', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_FILES)).then(() => self.skipWaiting()));
