@@ -1,5 +1,5 @@
 'use strict';
-const CACHE_NAME = 'loto6-analyzer-v2-1';
+const CACHE_NAME = 'loto6-analyzer-v2-2';
 const STATIC_FILES = ['/', '/index.html', '/style.css', '/app.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', event => {
