@@ -2,8 +2,8 @@
 
 let draws = [];
 let deferredInstallPrompt = null;
-const CACHE_KEY = 'loto6_draws_v2_4';
-const CACHE_META_KEY = 'loto6_draws_meta_v2_4';
+const CACHE_KEY = 'loto6_draws_v2_5';
+const CACHE_META_KEY = 'loto6_draws_meta_v2_5';
 let historyPage = 1;
 
 const $ = id => document.getElementById(id);
@@ -146,6 +146,16 @@ function filteredHistoryRows() {
   return filtered;
 }
 
+function numberBandCounts(numbers) {
+  return [
+    numbers.filter(number => number >= 1 && number <= 10).length,
+    numbers.filter(number => number >= 11 && number <= 20).length,
+    numbers.filter(number => number >= 21 && number <= 30).length,
+    numbers.filter(number => number >= 31 && number <= 40).length,
+    numbers.filter(number => number >= 41 && number <= 43).length,
+  ];
+}
+
 function renderHistory() {
   if (!$('historyList')) return;
 
@@ -169,6 +179,8 @@ function renderHistory() {
 
   $('historyList').innerHTML = pageRows.length ? pageRows.map(draw => {
     const firstPrizeWinners = Math.max(0, Number(draw.firstPrizeWinners) || 0);
+    const bandCounts = numberBandCounts(draw.nums);
+    const bandLabels = ['1番台', '10番台', '20番台', '30番台', '40番台'];
     return `
     <article class="historyItem${firstPrizeWinners > 0 ? ' hasFirstPrizeWinner' : ''}">
       <div class="historyMeta">
@@ -178,9 +190,21 @@ function renderHistory() {
           ? `<span class="firstPrizeWin">一等当選 ${firstPrizeWinners.toLocaleString('ja-JP')}口</span>`
           : '<span class="firstPrizeNone">一等当選なし</span>'}
       </div>
-      <div class="historyNumbers">
-        ${draw.nums.map(number => `<span class="ball${requiredNumbers.includes(number) ? ' historyMatchBall' : ''}">${number}</span>`).join('')}
-        <span class="bonusBall">BO ${draw.bonus}</span>
+      <div class="historyDrawData">
+        <div class="historyNumbers">
+          ${draw.nums.map(number => `<span class="ball${requiredNumbers.includes(number) ? ' historyMatchBall' : ''}">${number}</span>`).join('')}
+          <span class="bonusBall">BO ${draw.bonus}</span>
+        </div>
+        <div class="numberBandPanel" aria-label="数字帯ごとの本数字の個数">
+          <span class="numberBandTitle">数字帯の個数</span>
+          <div class="numberBandGrid">
+            ${bandCounts.map((count, index) => `
+              <span class="numberBandCell">
+                <small>${bandLabels[index]}</small>
+                <strong>${count}</strong>
+              </span>`).join('')}
+          </div>
+        </div>
       </div>
     </article>`;
   }).join('') : '<div class="historyEmpty">条件に一致する抽選結果はありません。</div>';

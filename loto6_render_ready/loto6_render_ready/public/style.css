@@ -72,3 +72,16 @@ footer{text-align:center;color:var(--muted);font-size:.78rem;padding:0 14px 28px
 
 /* v2.4 1等当選なし表示 */
 .historyMeta .firstPrizeNone{display:inline-flex;align-items:center;width:max-content;margin-top:4px;color:#6b7280;font-size:.78rem;font-weight:700;line-height:1.2}
+
+
+/* v2.5 各抽選回の数字帯別個数 */
+.historyDrawData{display:grid;grid-template-columns:minmax(300px,1fr) minmax(290px,360px);gap:14px;align-items:center;min-width:0}
+.numberBandPanel{border:1px solid #dbe3ee;border-radius:11px;background:#f8fafc;padding:8px 10px;min-width:0}
+.numberBandTitle{display:block;margin-bottom:5px;color:#64748b;font-size:.7rem;font-weight:800;letter-spacing:.04em}
+.numberBandGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.numberBandCell{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:4px 2px;border-left:1px solid #e2e8f0}
+.numberBandCell:first-child{border-left:0}
+.numberBandCell small{color:#64748b;font-size:.63rem;white-space:nowrap}
+.numberBandCell strong{font-size:1.05rem;line-height:1.2;color:#0f172a}
+@media(max-width:900px){.historyDrawData{grid-template-columns:1fr}.numberBandPanel{max-width:420px}}
+@media(max-width:420px){.numberBandPanel{padding:7px 6px}.numberBandGrid{gap:1px}.numberBandCell small{font-size:.57rem}.numberBandCell strong{font-size:.98rem}}
